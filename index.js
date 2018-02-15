@@ -1,24 +1,19 @@
 const path = require('path');
 const electron = require('electron');
-const { app, BrowserWindow, Tray } = electron;
+const { app, ipcMain } = electron;
 const TimerTray = require('./app/timer_tray');
+const MainWindow = require('./app/main_window');
 
 let mainWindow;
 let tray;
 
 app.on('ready', () => {
     app.dock.hide();
-    mainWindow = new BrowserWindow({
-        height: 500,
-        width: 300,
-        frame: false,
-        resizable: false,
-        show: false // so the timer won't show until the tray icon is pressed
-    });
-    mainWindow.loadURL(`file://${__dirname}/src/index.html`);
-    mainWindow.on('blur', () => {
-        mainWindow.hide();
-    });
+    mainWindow = new MainWindow(`file://${__dirname}/src/index.html`);
+    // mainWindow.loadURL(`file://${__dirname}/src/index.html`); // taking this out so you can pass it in as 
+    // a parameter/argument for the MainWindow class in the main_window.js file
+    // keep this code here (line 12 - `mainWindow.loadURL()` if you decide you want to not be so specific
+    // about the URL and might change it later or add more later
 
     const iconName = process.platform === 'win32' ? 'windows-icon.png': 'iconTemplate.png';
     const iconPath = path.join(__dirname,`./src/assets/${iconName}`);
@@ -43,4 +38,9 @@ app.on('ready', () => {
         //     mainWindow.show();
         // }    
     // });  <--this section was moved over to timer_tray.js. (see the different syntax)
+
+});
+   
+ipcMain.on('update-timer', (event, timeLeft) => {
+    tray.setTitle(timeLeft); // this is the magic using the method off the extended Tray class from `timer-tray.js`
 });
